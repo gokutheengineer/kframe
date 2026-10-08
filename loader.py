@@ -105,4 +105,7 @@ def load_safetensors_weight(path : str) -> dict[str, torch.Tensor]:
     return parse_weights(mm)
 
 
-load_safetensors = load_safetensors_weight
+def fp32_to_bf16_bits(x: torch.Tensor) -> torch.Tensor:
+    u = x.view(torch.int32)
+    is_nan = torch.isnan(x)
+    
