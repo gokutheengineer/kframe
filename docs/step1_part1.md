@@ -100,3 +100,31 @@ def load_safetensors_header(path: str) -> tuple[dict, int]:
 ```
 
 Write this in `loader.py`. Once you write it, tell me, and we'll write a quick 3-line test to inspect the header of your downloaded Llama-3.2-1B model!
+
+---
+
+## Testing Without the Full 2.5 GB Model (Synthetic Fixtures)
+
+You do not need the 2.5 GB Llama model downloaded to build and test `loader.py`. In fact, testing against a small synthetic fixture is standard professional practice:
+
+### 1. Test against a 50-byte dummy fixture in `tests/test_loader.py`
+In your test file on the i9, you can write a tiny helper that creates a dummy `.safetensors` file with just 2 small tensors (e.g. `[2, 2]` float32 and `[4]` bfloat16).
+
+* Your header parser and `torch.frombuffer` loader can be built and tested against this file in milliseconds.
+* You'll know your code works 100% before ever touching real weights.
+
+### 2. Code Part 3: FP32 $\to$ BF16 Bit-Manipulation
+Part 3 requires no files at all:
+* It is pure integer bit arithmetic on random numbers (`torch.randn`).
+* You can write the bitwise rounding function and test it against 10M values right on the i9 CPU.
+
+### 3. Optional: Start the download in the background on i9
+If your i9 has internet, you can kick off the download in the background while you code:
+
+```bash
+# In another terminal tab on the i9:
+pip install huggingface_hub
+hf download meta-llama/Llama-3.2-1B
+```
+
+By the time you finish writing the loader and tests with the dummy fixture, the real model will be downloaded, and you can run the final test asserting parity across all 146 real weights!
